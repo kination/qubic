@@ -461,8 +461,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "toqueue"
+name = "toqueue-cli"
 version = "0.1.0"
+
+[[package]]
+name = "toqueue-server"
+version = "0.0.1"
 dependencies = [
  "bytes",
  "futures",

@@ -1,21 +1,6 @@
-[package]
-name = "toqueue"
-version = "0.1.0"
-authors = ["djKooks <inylove82@gmail.com>"]
-edition = "2018"
+[workspace]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-tokio = { version = "1.7.0", features = ["full"] }
-tokio-util = { version = "0.6.7", features = ["full"] }
-tokio-stream = { version = "0.1" }
-
-bytes = "1.0.0"
-futures = { version = "0.3.0", features = ["thread-pool"]}
-http = "0.2"
-serde = "1.0"
-serde_derive = "1.0"
-serde_json = "1.0"
-httparse = "1.0"
-time = "0.1"
+members = [
+    "toqueue-cli",
+    "toqueue-server"
+]
