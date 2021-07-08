@@ -1,55 +1,30 @@
-mod encoder;
-
-use futures::SinkExt;
-use http::{Request, Response};
-
-use std::{error::Error, io};
-use tokio::net::{TcpListener, TcpStream};
+#![warn(rust_2018_idioms)]
+use tokio::net::TcpListener;
 use tokio_stream::StreamExt;
-use tokio_util::codec::{Framed};
+use tokio_util::codec::{BytesCodec, Decoder};
 
-use crate::encoder::Http;
+use std::error::Error;
 
 const SERVER_HOST: &str = "127.0.0.1:7700";
 
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let server = TcpListener::bind(SERVER_HOST).await?;
+    let listener = TcpListener::bind(&SERVER_HOST).await?;
     println!("Listening on: {}", SERVER_HOST);
 
     loop {
-        let (stream, _) = server.accept().await?;
+        let (socket, _) = listener.accept().await?;
+
         tokio::spawn(async move {
-            if let Err(e) = process(stream).await {
-                println!("failed to process connection; error = {}", e);
+            let mut framed = BytesCodec::new().framed(socket);
+            while let Some(message) = framed.next().await {
+                match message {
+                    Ok(bytes) => println!("bytes: {:?}", bytes),
+                    Err(err) => println!("Socket closed with error: {:?}", err),
+                }
             }
+            
         });
     }
-}
-
-async fn process(stream: TcpStream) -> Result<(), Box<dyn Error>> {
-    let mut transport = Framed::new(stream, Http);
-
-    while let Some(request) = transport.next().await {
-        match request {
-            Ok(request) => {
-                println!("request: {:?}", request);
-                let response = respond(request).await?;
-                transport.send(response).await?;
-            }
-            Err(e) => return Err(e.into()),
-        }
-    }
-
-    Ok(())
-}
-
-async fn respond(req: Request<()>) -> Result<Response<String>, Box<dyn Error>> {
-    // req.uri.path?
-    let body = String::from("test body");
-    let response = Response::builder()
-        .body(body)
-        .map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
-
-    Ok(response)
 }
