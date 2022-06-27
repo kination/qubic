@@ -1,6 +1,6 @@
 [workspace]
 
 members = [
-    "toqueue-cli",
-    "toqueue-server"
+    "qubic-cli",
+    "qubic-server"
 ]
