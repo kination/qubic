@@ -1,6 +1,6 @@
 [package]
-name = "toqueue-server"
-version = "0.0.1"
+name = "qubic-cli"
+version = "0.1.0"
 authors = ["djKooks <inylove82@gmail.com>"]
 edition = "2018"
 
@@ -8,10 +8,8 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "1.7.0", features = ["full"] }
-tokio-util = { version = "0.6.7", features = ["full"] }
-tokio-stream = { version = "0.1" }
+structopt = "0.3"
+quinn = "0.7"
 
+ring = "0.16"
 
-[[bin]]
-name = "server"
-path = "src/server.rs"
