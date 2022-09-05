@@ -1,15 +1,14 @@
 [package]
 name = "qubic-cli"
-version = "0.1.0"
-authors = ["djKooks <inylove82@gmail.com>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+version = "0.0.1"
+authors = ["kination <kination27@gmail.com>"]
+edition = "2021"
 
 [dependencies]
-tokio = { version = "1.7.0", features = ["full"] }
-structopt = "0.3"
-quinn = "0.7"
+s2n-quic = { version = "1" }
+tokio = { version = "1", features = ["full"] }
 
-ring = "0.16"
+[[bin]]
+name = "cli"
+path = "src/main.rs"
 

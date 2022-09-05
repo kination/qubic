@@ -1,43 +1,43 @@
-#![warn(rust_2018_idioms)]
-use tokio::net::TcpListener;
-use tokio_stream::StreamExt;
-use tokio_util::codec::{BytesCodec, Decoder};
-
-use quinn::{Endpoint, ServerConfig, NewConnection,};
-
-use ring::rand::*;
-
+use s2n_quic::Server;
 use std::error::Error;
-use std::net::SocketAddr;
 
-const SERVER_HOST: &str = "127.0.0.1:7700";
-
-fn client_addr() -> SocketAddr {
-    "127.0.0.1:5000".parse::<SocketAddr>().unwrap()
-}
-
-fn server_addr() -> SocketAddr {
-    SERVER_HOST.parse::<SocketAddr>().unwrap()
-}
-
+/// NOTE: this certificate is to be used for demonstration purposes only!
+pub static CERT_PEM: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../cert.pem"
+));
+/// NOTE: this certificate is to be used for demonstration purposes only!
+pub static KEY_PEM: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../key.pem"
+));
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    
-    let mut endpoint_builder = Endpoint::builder();
-    endpoint_builder.listen(ServerConfig::default());
+    let mut server = Server::builder()
+        .with_tls((CERT_PEM, KEY_PEM))?
+        .with_io("127.0.0.1:4433")?
+        .start()?;
 
-    // Bind this endpoint to a UDP socket on the given server address. 
-    let (endpoint, mut incoming) = endpoint_builder.bind(&server_addr())?;
+    while let Some(mut connection) = server.accept().await {
+        // spawn a new task for the connection
+        tokio::spawn(async move {
+            eprintln!("Connection accepted from {:?}", connection.remote_addr());
 
-    // Start iterating over incoming connections.
-    while let Some(conn) = incoming.next().await {
-        let mut connection: NewConnection = conn.await?;
+            while let Ok(Some(mut stream)) = connection.accept_bidirectional_stream().await {
+                // spawn a new task for the stream
+                tokio::spawn(async move {
+                    eprintln!("Stream opened from {:?}", stream.connection().remote_addr());
 
-        // Save connection somewhere, start transferring, receiving data, see DataTransfer tutorial.
+                    // echo any data back to the stream
+                    while let Ok(Some(data)) = stream.receive().await {
+                        eprintln!("Receive message from stream : {:?}", data);
+                        stream.send(data).await.expect("stream should be open");
+                    }
+                });
+            }
+        });
     }
-    
-
 
     Ok(())
 }
